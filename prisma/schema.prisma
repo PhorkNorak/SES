@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String       @id @default(uuid()) @db.Uuid
+  employeeId   String       @unique @map("employee_id")
+  nameEn       String       @map("name_en")
+  nameKh       String       @map("name_kh")
+  gender       String
+  role         String
+  position     String
+  joinDate     DateTime     @map("join_date")
+  email        String       @unique
+  passwordHash String       @map("password_hash")
+  departmentId String       @map("department_id") @db.Uuid
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  department   Department   @relation(fields: [departmentId], references: [id])
+  evaluations  Evaluation[] @relation("EmployeeEvaluations")
+  evaluating   Evaluation[] @relation("EvaluatorEvaluations")
+
+  @@map("users")
+}
+
+model Evaluation {
+  id            String   @id @default(uuid()) @db.Uuid
+  month         Int
+  year          Int
+  employeeId    String   @map("employee_id") @db.Uuid
+  evaluatorId   String   @map("evaluator_id") @db.Uuid
+  type          String   @default("STAFF_COMMENDATION")
+  workQuality   Decimal  @map("work_quality")
+  workQuantity  Decimal  @map("work_quantity")
+  knowledge     Decimal
+  initiative    Decimal
+  teamwork      Decimal
+  communication Decimal
+  punctuality   Decimal
+  management    Decimal
+  reliability   Decimal
+  otherFactors  Decimal  @map("other_factors")
+  totalScore    Decimal  @map("total_score")
+  ratio         Decimal
+  percentage    Decimal
+  grade         String
+  comments      String?
+  status        String   @default("INCOMPLETE")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  employee      User     @relation("EmployeeEvaluations", fields: [employeeId], references: [id])
+  evaluator     User     @relation("EvaluatorEvaluations", fields: [evaluatorId], references: [id])
+
+  @@map("evaluations")
+}
+
+model Department {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  managerId String   @map("manager_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  users     User[]
+
+  @@map("departments")
+}
